@@ -1,5 +1,7 @@
 # Python
 __pycache__/
+*/__pycache__/
+*/*/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -45,4 +47,5 @@ backups/
 *.db-shm
 *.db-wal
 fingerprints/
+turnstilePatch/
 ItemTable.json 
