@@ -9,6 +9,9 @@ import logging
 class SystemConfigManager(ConfigManager):
     """系统配置管理器类，继承自 ConfigManager"""
     
+    # 添加类变量，记录是否已经初始化过默认配置
+    _has_initialized_defaults = False
+    
     def __init__(self, config_file: str = "config/system_config.json"):
         """初始化系统配置管理器
         
@@ -21,92 +24,136 @@ class SystemConfigManager(ConfigManager):
         # 设置日志记录器
         self.logger = logging.getLogger("SystemConfigManager")
         
-        # 设置默认路径
+        # 检查是否已初始化过默认路径
+        if not SystemConfigManager._has_initialized_defaults:
+            try:
+                # 设置Cursor可执行文件路径
+                if not self.get_config("cursor", "executable_path"):
+                    cursor_exe = self._find_cursor_exe()
+                    if cursor_exe:
+                        self.set_config("cursor", "executable_path", cursor_exe)
+                        self.logger.info(f"设置Cursor可执行文件路径: {cursor_exe}")
+                    else:
+                        self.logger.warning("未找到Cursor可执行文件")
+                        
+                # 设置Cursor数据目录
+                if not self.get_config("cursor", "data_dir"):
+                    cursor_data = self._find_cursor_data_dir()
+                    if cursor_data:
+                        self.set_config("cursor", "data_dir", cursor_data)
+                        self.logger.info(f"设置Cursor数据目录: {cursor_data}")
+                    else:
+                        self.logger.warning("未找到Cursor数据目录")
+                        
+                # 设置Cursor配置文件
+                if not self.get_config("cursor", "config_file"):
+                    cursor_config = self._find_cursor_config_file()
+                    if cursor_config:
+                        self.set_config("cursor", "config_file", cursor_config)
+                        self.logger.info(f"设置Cursor配置文件: {cursor_config}")
+                    else:
+                        self.logger.warning("未找到Cursor配置文件")
+                        
+                # 设置Cursor数据库文件
+                if not self.get_config("cursor", "db_file"):
+                    cursor_db = self._find_cursor_db_file()
+                    if cursor_db:
+                        self.set_config("cursor", "db_file", cursor_db)
+                        self.logger.info(f"设置Cursor数据库文件: {cursor_db}")
+                    else:
+                        self.logger.warning("未找到Cursor数据库文件")
+                        
+                # 设置Chrome可执行文件路径
+                if not self.get_config("chrome", "executable_path"):
+                    chrome_exe = self._find_chrome_exe()
+                    if chrome_exe:
+                        self.set_config("chrome", "executable_path", chrome_exe)
+                        self.logger.info(f"设置Chrome可执行文件路径: {chrome_exe}")
+                    else:
+                        self.logger.warning("未找到Chrome可执行文件")
+                        
+                # 设置Chrome用户数据目录
+                if not self.get_config("chrome", "user_data_dir"):
+                    chrome_data = self._find_chrome_user_data_dir()
+                    if chrome_data:
+                        self.set_config("chrome", "user_data_dir", chrome_data)
+                        self.logger.info(f"设置Chrome用户数据目录: {chrome_data}")
+                    else:
+                        self.logger.warning("未找到Chrome用户数据目录")
+                        
+                # 设置Chrome自动化配置
+                if not self.has_config("chrome.automation"):
+                    automation_config = {
+                        "headless": False,  # 无头模式
+                        "user_agent": {
+                            "enabled": False,
+                            "type": "default",  # default, custom, random, mobile, tablet
+                            "custom": "",       # 自定义UA字符串
+                            "presets": {
+                                "chrome_windows": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                                "chrome_mac": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                                "chrome_android": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
+                                "chrome_ios": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/122.0.0.0 Mobile/15E148 Safari/604.1"
+                            }
+                        },
+                        "window_size": {
+                            "width": 1920,
+                            "height": 1080
+                        },
+                        "disable_gpu": True,         # 禁用GPU
+                        "disable_images": False,     # 禁用图片加载
+                        "incognito": False,         # 无痕模式
+                        "disable_javascript": False, # 禁用JavaScript
+                        "timeout": 30,              # 页面加载超时时间(秒)
+                        "use_local_browser": True   # 使用本地浏览器
+                    }
+                    self.set_config("chrome", "automation", automation_config)
+                    self.logger.info("已设置Chrome自动化默认配置")
+                
+                # 标记已初始化默认配置
+                SystemConfigManager._has_initialized_defaults = True
+                
+            except Exception as e:
+                self.error(f"初始化系统配置失败: {str(e)}")
+                
+    # 添加一个方法，用于强制重新检测路径
+    def redetect_paths(self):
+        """强制重新检测所有路径，通常在用户明确要求时调用"""
         try:
-            # 设置Cursor可执行文件路径
-            if not self.get_config("cursor", "executable_path"):
-                cursor_exe = self._find_cursor_exe()
-                if cursor_exe:
-                    self.set_config("cursor", "executable_path", cursor_exe)
-                    self.logger.info(f"设置Cursor可执行文件路径: {cursor_exe}")
-                else:
-                    self.logger.warning("未找到Cursor可执行文件")
-                    
-            # 设置Cursor数据目录
-            if not self.get_config("cursor", "data_dir"):
-                cursor_data = self._find_cursor_data_dir()
-                if cursor_data:
-                    self.set_config("cursor", "data_dir", cursor_data)
-                    self.logger.info(f"设置Cursor数据目录: {cursor_data}")
-                else:
-                    self.logger.warning("未找到Cursor数据目录")
-                    
-            # 设置Cursor配置文件
-            if not self.get_config("cursor", "config_file"):
-                cursor_config = self._find_cursor_config_file()
-                if cursor_config:
-                    self.set_config("cursor", "config_file", cursor_config)
-                    self.logger.info(f"设置Cursor配置文件: {cursor_config}")
-                else:
-                    self.logger.warning("未找到Cursor配置文件")
-                    
-            # 设置Cursor数据库文件
-            if not self.get_config("cursor", "db_file"):
-                cursor_db = self._find_cursor_db_file()
-                if cursor_db:
-                    self.set_config("cursor", "db_file", cursor_db)
-                    self.logger.info(f"设置Cursor数据库文件: {cursor_db}")
-                else:
-                    self.logger.warning("未找到Cursor数据库文件")
-                    
-            # 设置Chrome可执行文件路径
-            if not self.get_config("chrome", "executable_path"):
-                chrome_exe = self._find_chrome_exe()
-                if chrome_exe:
-                    self.set_config("chrome", "executable_path", chrome_exe)
-                    self.logger.info(f"设置Chrome可执行文件路径: {chrome_exe}")
-                else:
-                    self.logger.warning("未找到Chrome可执行文件")
-                    
-            # 设置Chrome用户数据目录
-            if not self.get_config("chrome", "user_data_dir"):
-                chrome_data = self._find_chrome_user_data_dir()
-                if chrome_data:
-                    self.set_config("chrome", "user_data_dir", chrome_data)
-                    self.logger.info(f"设置Chrome用户数据目录: {chrome_data}")
-                else:
-                    self.logger.warning("未找到Chrome用户数据目录")
-                    
-            # 设置Chrome自动化配置
-            if not self.has_config("chrome.automation"):
-                automation_config = {
-                    "headless": False,  # 无头模式
-                    "user_agent": {
-                        "enabled": False,
-                        "type": "default",  # default, custom, random, mobile, tablet
-                        "custom": "",       # 自定义UA字符串
-                        "presets": {
-                            "chrome_windows": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                            "chrome_mac": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                            "chrome_android": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
-                            "chrome_ios": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/122.0.0.0 Mobile/15E148 Safari/604.1"
-                        }
-                    },
-                    "window_size": {
-                        "width": 1920,
-                        "height": 1080
-                    },
-                    "disable_gpu": True,         # 禁用GPU
-                    "disable_images": False,     # 禁用图片加载
-                    "incognito": False,         # 无痕模式
-                    "disable_javascript": False, # 禁用JavaScript
-                    "timeout": 30               # 页面加载超时时间(秒)
-                }
-                self.set_config("chrome", "automation", automation_config)
-                self.logger.info("已设置Chrome自动化默认配置")
-                    
+            cursor_exe = self._find_cursor_exe()
+            if cursor_exe:
+                self.set_config("cursor", "executable_path", cursor_exe)
+                self.logger.info(f"重新检测到Cursor可执行文件路径: {cursor_exe}")
+            
+            cursor_data = self._find_cursor_data_dir()
+            if cursor_data:
+                self.set_config("cursor", "data_dir", cursor_data)
+                self.logger.info(f"重新检测到Cursor数据目录: {cursor_data}")
+            
+            cursor_config = self._find_cursor_config_file()
+            if cursor_config:
+                self.set_config("cursor", "config_file", cursor_config)
+                self.logger.info(f"重新检测到Cursor配置文件: {cursor_config}")
+            
+            cursor_db = self._find_cursor_db_file()
+            if cursor_db:
+                self.set_config("cursor", "db_file", cursor_db)
+                self.logger.info(f"重新检测到Cursor数据库文件: {cursor_db}")
+            
+            chrome_exe = self._find_chrome_exe()
+            if chrome_exe:
+                self.set_config("chrome", "executable_path", chrome_exe)
+                self.logger.info(f"重新检测到Chrome可执行文件路径: {chrome_exe}")
+            
+            chrome_data = self._find_chrome_user_data_dir()
+            if chrome_data:
+                self.set_config("chrome", "user_data_dir", chrome_data)
+                self.logger.info(f"重新检测到Chrome用户数据目录: {chrome_data}")
+                
+            return True
         except Exception as e:
-            self.error(f"初始化系统配置失败: {str(e)}")
+            self.error(f"重新检测路径失败: {str(e)}")
+            return False
         
     def warning(self, message: str):
         """记录警告日志

@@ -9,7 +9,7 @@
 - 支持使用本地Chrome浏览器进行自动化
 - 可配置的自动化任务
 - 支持任务调度
-- 账号信息仅保存在JSON文件中（不使用数据库）
+- 账号信息存储在SQLite数据库中，提供更好的数据管理和安全性
 - 完整的Cursor相关路径配置
 
 ## 安装
@@ -60,7 +60,7 @@ python main.py
 
 ## 账号管理
 
-账号信息仅保存在JSON文件中(`config/accounts.json`)，不会存储到数据库中，提高了数据安全性。
+账号信息存储在SQLite数据库中(`db/accounts.db`)，不再使用JSON文件存储，提供了更好的数据安全性和管理能力。
 
 ## 项目结构
 
@@ -68,15 +68,17 @@ python main.py
 cursor-auto-manager/
 ├── config/              # 配置文件
 │   ├── __init__.py
-│   ├── accounts.json    # 账号信息存储文件
 │   ├── system_config.json # 系统配置文件
 │   └── cursor_auth.json # Cursor原始授权数据
 ├── core/                # 核心功能
 │   ├── __init__.py
 │   ├── automation.py    # 自动化任务
 │   ├── browser.py       # 浏览器管理器
-│   ├── account_manager.py # 账号管理器
+│   ├── account_manager_db.py # 数据库版账号管理器
+│   ├── account_db_manager.py # 账号数据库管理器
 │   └── db_manager.py    # 数据库管理器
+├── db/                  # 数据库文件
+│   └── accounts.db      # 账号数据库
 ├── ui/                  # 用户界面
 │   ├── __init__.py
 │   ├── main_window.py   # 主窗口

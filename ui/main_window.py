@@ -8,7 +8,7 @@ from core.automation import AutomationManager
 from core.process_manager import CursorProcessManager
 from utils.system_config import SystemConfigManager
 from core.db_manager import DbManager
-from core.account_manager import AccountManager
+from core.account_manager_db import AccountManagerDb
 from utils.logger import LoggerManager
 from ui.task_dialog import TaskDialog
 from ui.process_tab import ProcessTab
@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         self.browser_manager = browser_manager
         self.automation_manager = automation_manager
         # 创建账号管理器（如果外部没有传入，后续会被覆盖）
-        self.account_manager = AccountManager()
+        self.account_manager = AccountManagerDb()
         self.logger_manager = LoggerManager()
         
         # 加载配置
@@ -606,6 +606,22 @@ class MainWindow(QMainWindow):
         
     def handle_register(self):
         """处理注册账号"""
+        try:
+            # 先跳转到首页
+            home_url = AuthDialog.BASE_URL
+            self.auth_status_label.setText("正在跳转到首页...")
+            self.auth_status_label.setStyleSheet("color: #17a2b8;")  # 蓝色，表示进行中
+            webbrowser.open(home_url)
+            
+            # 创建一个短暂的延迟，让浏览器有时间加载首页
+            QTimer.singleShot(1500, lambda: self._redirect_to_register())
+        except Exception as e:
+            QMessageBox.warning(self, "错误", f"打开首页失败: {str(e)}")
+            self.auth_status_label.setText("打开首页失败")
+            self.auth_status_label.setStyleSheet("color: #dc3545;")  # 红色，表示失败
+            
+    def _redirect_to_register(self):
+        """重定向到注册页面"""
         try:
             # 打开注册页面
             register_url = AuthDialog.REGISTER_URL

@@ -259,6 +259,12 @@ class SystemConfigTab(QWidget):
         self.backup_btn.setStyleSheet(button_style)
         buttons_layout.addWidget(self.backup_btn)
         
+        # 添加自动检测按钮
+        self.detect_paths_btn = QPushButton("自动检测路径")
+        self.detect_paths_btn.clicked.connect(self.detect_paths)
+        self.detect_paths_btn.setStyleSheet(button_style)
+        buttons_layout.addWidget(self.detect_paths_btn)
+        
         buttons_layout.addStretch()
         
         layout.addLayout(buttons_layout)
@@ -527,25 +533,46 @@ class SystemConfigTab(QWidget):
         cursor_db_group.setLayout(cursor_db_layout)
         cursor_layout.addWidget(cursor_db_group)
         
+        # 机器ID配置组
+        machine_id_group = QGroupBox("Cursor机器ID配置")
+        machine_id_group.setStyleSheet(group_style)
+        machine_id_group_layout = QVBoxLayout()
+        
+        # 机器ID路径
+        machine_id_path_layout = QHBoxLayout()
+        
+        self.machine_id_path = QLineEdit()
+        self.machine_id_path.setPlaceholderText("请输入Cursor机器ID文件路径")
+        self.machine_id_path.textChanged.connect(lambda: self.save_btn.setEnabled(True))
+        self.machine_id_path.setStyleSheet(input_style)
+        machine_id_path_layout.addWidget(self.machine_id_path)
+        
+        self.machine_id_browse_btn = QPushButton("浏览...")
+        self.machine_id_browse_btn.setStyleSheet(browse_button_style)
+        self.machine_id_browse_btn.clicked.connect(self.browse_machine_id_path)
+        machine_id_path_layout.addWidget(self.machine_id_browse_btn)
+        
+        self.machine_id_view_btn = QPushButton("查看内容")
+        self.machine_id_view_btn.setStyleSheet(browse_button_style)
+        self.machine_id_view_btn.clicked.connect(self.view_machine_id)
+        machine_id_path_layout.addWidget(self.machine_id_view_btn)
+        
+        # 机器ID说明
+        machine_id_info = QLabel("机器ID用于Cursor唯一标识您的设备，更改此路径可能会影响授权状态。")
+        machine_id_info.setWordWrap(True)
+        machine_id_info.setStyleSheet("color: #666; font-style: italic; padding: 5px;")
+        
+        machine_id_group_layout.addLayout(machine_id_path_layout)
+        machine_id_group_layout.addWidget(machine_id_info)
+        
+        machine_id_group.setLayout(machine_id_group_layout)
+        cursor_layout.addWidget(machine_id_group)
+        
         # Cursor其他配置文件组
         cursor_other_group = QGroupBox("Cursor其他路径配置")
         cursor_other_group.setStyleSheet(group_style)
         cursor_other_layout = QFormLayout()
         cursor_other_layout.setSpacing(10)
-        
-        # 机器ID路径
-        self.machine_id_path = QLineEdit()
-        self.machine_id_path.setPlaceholderText("请输入Cursor机器ID文件路径")
-        self.machine_id_path.textChanged.connect(lambda: self.save_btn.setEnabled(True))
-        self.machine_id_path.setStyleSheet(input_style)
-        
-        machine_id_layout = QHBoxLayout()
-        machine_id_layout.addWidget(self.machine_id_path)
-        
-        self.machine_id_browse_btn = QPushButton("浏览...")
-        self.machine_id_browse_btn.setStyleSheet(browse_button_style)
-        self.machine_id_browse_btn.clicked.connect(self.browse_machine_id_path)
-        machine_id_layout.addWidget(self.machine_id_browse_btn)
         
         # 资源路径
         self.resources_path = QLineEdit()
@@ -604,7 +631,6 @@ class SystemConfigTab(QWidget):
         product_json_layout.addWidget(self.product_json_browse_btn)
         
         # 添加到布局
-        cursor_other_layout.addRow("机器ID路径:", machine_id_layout)
         cursor_other_layout.addRow("资源路径:", resources_layout)
         cursor_other_layout.addRow("更新程序路径:", updater_layout)
         cursor_other_layout.addRow("更新配置路径:", update_yml_layout)
@@ -626,12 +652,12 @@ class SystemConfigTab(QWidget):
         chrome_layout = QVBoxLayout(self.chrome_tab)
         
         # Chrome可执行文件路径
-        chrome_path_group = QGroupBox("Chrome浏览器可执行文件")
+        chrome_path_group = QGroupBox("本地Chrome浏览器可执行文件")
         chrome_path_group.setStyleSheet(group_style)
         chrome_path_layout = QHBoxLayout()
         
         self.chrome_exe_path = QLineEdit()
-        self.chrome_exe_path.setPlaceholderText("请选择Chrome浏览器可执行文件路径")
+        self.chrome_exe_path.setPlaceholderText("请选择本地Chrome浏览器可执行文件路径")
         self.chrome_exe_path.setStyleSheet(input_style)
         self.chrome_exe_path.textChanged.connect(lambda: self.save_btn.setEnabled(True))
         chrome_path_layout.addWidget(self.chrome_exe_path)
@@ -664,7 +690,7 @@ class SystemConfigTab(QWidget):
         chrome_layout.addWidget(chrome_data_group)
         
         # 添加提示
-        chrome_note = QLabel("注意: Chrome浏览器路径将用于自动化任务和页面控制")
+        chrome_note = QLabel("注意: 本地Chrome浏览器路径将用于自动化任务和页面控制，请确保指定正确的chrome.exe文件路径")
         chrome_note.setStyleSheet("""
             QLabel {
                 color: #6c757d;
@@ -815,8 +841,8 @@ class SystemConfigTab(QWidget):
         privacy_options.addWidget(self.incognito_mode)
         privacy_options.addWidget(self.disable_js)
         
-        # 添加使用本地浏览器选项
-        self.use_local_browser = QCheckBox("使用本地Chrome浏览器")
+        # 添加使用本地Chrome浏览器选项
+        self.use_local_browser = QCheckBox("使用指定的本地Chrome浏览器")
         self.use_local_browser.setStyleSheet(checkbox_style)
         privacy_options.addWidget(self.use_local_browser)
         
@@ -866,8 +892,9 @@ class SystemConfigTab(QWidget):
         automation_layout.addWidget(options_group)
         
         # 添加说明文本
-        help_text = QLabel("提示：无界面模式适合自动化任务，禁用图片和JavaScript可以提高加载速度")
+        help_text = QLabel("提示：无界面模式适合自动化任务，禁用图片和JavaScript可以提高加载速度。请确保正确设置本地Chrome浏览器路径（chrome.exe）以确保自动化功能正常工作。")
         help_text.setStyleSheet("color: #666; padding: 5px;")
+        help_text.setWordWrap(True)
         automation_layout.addWidget(help_text)
         
         automation_group.setLayout(automation_layout)
@@ -1174,11 +1201,11 @@ class SystemConfigTab(QWidget):
             self.cursor_db_path.setText(file_path)
             
     def browse_chrome_path(self):
-        """浏览Chrome可执行文件路径"""
+        """浏览本地Chrome浏览器可执行文件路径"""
         file_filter = "可执行文件 (*.exe)" if platform.system() == "Windows" else "可执行文件 (*.*)"
         file_path, _ = QFileDialog.getOpenFileName(
             self, 
-            "选择Chrome浏览器可执行文件", 
+            "选择本地Chrome浏览器可执行文件", 
             self.chrome_exe_path.text(),
             file_filter
         )
@@ -1205,6 +1232,43 @@ class SystemConfigTab(QWidget):
         )
         if file_path:
             self.machine_id_path.setText(file_path)
+            
+            # 询问是否查看文件内容
+            if QMessageBox.question(
+                self,
+                "查看机器ID",
+                "是否查看机器ID文件内容？\n注意：机器ID是Cursor的唯一标识，请谨慎操作。",
+                QMessageBox.Yes | QMessageBox.No
+            ) == QMessageBox.Yes:
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                    
+                    dialog = QDialog(self)
+                    dialog.setWindowTitle("机器ID")
+                    dialog.resize(400, 200)
+                    
+                    layout = QVBoxLayout(dialog)
+                    
+                    text_edit = QTextEdit()
+                    text_edit.setReadOnly(True)
+                    text_edit.setFont(QFont("Courier New", 10))
+                    text_edit.setText(content)
+                    
+                    layout.addWidget(text_edit)
+                    
+                    # 添加提示信息
+                    warning_label = QLabel("警告：此ID用于标识您的设备，修改可能导致授权失效")
+                    warning_label.setStyleSheet("color: red; font-weight: bold;")
+                    layout.addWidget(warning_label)
+                    
+                    button_box = QDialogButtonBox(QDialogButtonBox.Close)
+                    button_box.rejected.connect(dialog.reject)
+                    layout.addWidget(button_box)
+                    
+                    dialog.exec_()
+                except Exception as e:
+                    QMessageBox.warning(self, "错误", f"无法读取机器ID文件: {str(e)}")
             
     def browse_resources_path(self):
         """浏览Cursor资源文件路径"""
@@ -1361,38 +1425,106 @@ class SystemConfigTab(QWidget):
         
     def set_default_paths(self):
         """设置默认路径"""
+        # 使用配置文件中已有的路径，避免重复查找
         # 如果Cursor可执行文件路径为空，则设置默认路径
         if not self.cursor_exe_path.text():
-            cursor_exe = self.system_config._find_cursor_exe()
+            cursor_exe = self.system_config.get_config("cursor", "executable_path", "")
             if cursor_exe:
                 self.cursor_exe_path.setText(cursor_exe)
                 
         # 如果Cursor数据目录为空，则设置默认路径
         if not self.cursor_data_path.text():
-            cursor_data = self.system_config._find_cursor_data_dir()
+            cursor_data = self.system_config.get_config("cursor", "data_dir", "")
             if cursor_data:
                 self.cursor_data_path.setText(cursor_data)
                 
         # 如果Cursor配置文件为空，则设置默认路径
         if not self.cursor_config_path.text():
-            cursor_config = self.system_config._find_cursor_config_file()
+            cursor_config = self.system_config.get_config("cursor", "config_file", "")
             if cursor_config:
                 self.cursor_config_path.setText(cursor_config)
                 
         # 如果Cursor数据库文件为空，则设置默认路径
         if not self.cursor_db_path.text():
-            cursor_db = self.system_config._find_cursor_db_file()
+            cursor_db = self.system_config.get_config("cursor", "db_file", "")
             if cursor_db:
                 self.cursor_db_path.setText(cursor_db)
                 
         # 如果Chrome可执行文件路径为空，则设置默认路径
         if not self.chrome_exe_path.text():
-            chrome_exe = self.system_config._find_chrome_exe()
+            chrome_exe = self.system_config.get_config("chrome", "executable_path", "")
             if chrome_exe:
                 self.chrome_exe_path.setText(chrome_exe)
                 
         # 如果Chrome用户数据目录为空，则设置默认路径
         if not self.chrome_data_path.text():
-            chrome_data = self.system_config._find_chrome_user_data_dir()
+            chrome_data = self.system_config.get_config("chrome", "user_data_dir", "")
             if chrome_data:
-                self.chrome_data_path.setText(chrome_data) 
+                self.chrome_data_path.setText(chrome_data)
+                
+    def detect_paths(self):
+        """自动检测所有路径"""
+        try:
+            # 显示进度对话框
+            QMessageBox.information(self, "自动检测", "即将开始自动检测路径，这可能需要几秒钟...")
+            
+            # 调用系统配置管理器的重新检测方法
+            if self.system_config.redetect_paths():
+                QMessageBox.information(self, "成功", "自动检测路径完成")
+                # 刷新UI显示
+                self.load_config_data()
+            else:
+                QMessageBox.warning(self, "警告", "自动检测路径时出现错误")
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"自动检测路径失败: {str(e)}")
+            
+    def view_machine_id(self):
+        """查看机器ID文件内容"""
+        machine_id_file = self.machine_id_path.text()
+        if not machine_id_file or not os.path.exists(machine_id_file):
+            QMessageBox.warning(self, "错误", "机器ID文件不存在")
+            return
+            
+        try:
+            with open(machine_id_file, "r", encoding="utf-8") as f:
+                content = f.read()
+                
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Cursor机器ID")
+            dialog.resize(500, 250)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # 添加机器ID内容
+            id_content_group = QGroupBox("机器ID内容")
+            id_content_layout = QVBoxLayout()
+            
+            text_edit = QTextEdit()
+            text_edit.setReadOnly(True)
+            text_edit.setFont(QFont("Courier New", 11))
+            text_edit.setText(content)
+            id_content_layout.addWidget(text_edit)
+            
+            id_content_group.setLayout(id_content_layout)
+            layout.addWidget(id_content_group)
+            
+            # 添加警告信息
+            warning_label = QLabel("警告：此ID是Cursor识别您设备的唯一标识，修改可能导致授权失效！")
+            warning_label.setStyleSheet("color: red; font-weight: bold; padding: 10px;")
+            warning_label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(warning_label)
+            
+            # 添加说明
+            info_label = QLabel("机器ID用于防止账号被滥用。如需迁移授权到新设备，请联系Cursor支持团队。")
+            info_label.setWordWrap(True)
+            info_label.setStyleSheet("color: #666; padding: 5px;")
+            layout.addWidget(info_label)
+            
+            # 添加按钮
+            button_box = QDialogButtonBox(QDialogButtonBox.Close)
+            button_box.rejected.connect(dialog.reject)
+            layout.addWidget(button_box)
+            
+            dialog.exec_()
+        except Exception as e:
+            QMessageBox.warning(self, "错误", f"无法读取机器ID文件: {str(e)}") 

@@ -12,6 +12,9 @@ from utils.logger import LoggerManager
 class CursorProcessManager(QObject):
     """Cursor进程管理器类，用于检测和控制Cursor进程"""
     
+    # 添加类变量作为缓存
+    _cursor_executable_cache = None
+    
     def __init__(self):
         """初始化Cursor进程管理器"""
         super().__init__()
@@ -34,8 +37,8 @@ class CursorProcessManager(QObject):
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
                     
-            # 获取可执行文件路径
-            executable = self._find_cursor_executable()
+            # 获取可执行文件路径（使用缓存）
+            executable = self._get_cached_cursor_executable()
             if executable:
                 self.logger.info(f"找到Cursor可执行文件: {executable}", "CursorProcessManager")
             else:
@@ -56,6 +59,24 @@ class CursorProcessManager(QObject):
                 "executable_exists": False
             }
             
+    def _get_cached_cursor_executable(self):
+        """获取缓存的Cursor可执行文件路径，如果缓存不存在则查找
+        
+        Returns:
+            str: 可执行文件路径，如果未找到则返回None
+        """
+        # 如果缓存存在且路径有效，直接返回缓存
+        if CursorProcessManager._cursor_executable_cache and os.path.exists(CursorProcessManager._cursor_executable_cache):
+            return CursorProcessManager._cursor_executable_cache
+            
+        # 缓存不存在或无效，重新查找
+        executable = self._find_cursor_executable()
+        if executable:
+            # 更新缓存
+            CursorProcessManager._cursor_executable_cache = executable
+        
+        return executable
+            
     def _find_cursor_executable(self):
         """查找Cursor可执行文件路径
         
@@ -63,6 +84,16 @@ class CursorProcessManager(QObject):
             str: 可执行文件路径，如果未找到则返回None
         """
         try:
+            # 尝试从配置文件获取
+            try:
+                from utils.system_config import SystemConfigManager
+                config = SystemConfigManager()
+                path = config.get_config("cursor", "executable_path", "")
+                if path and os.path.exists(path):
+                    return path
+            except Exception:
+                pass  # 如果无法从配置文件获取，继续使用硬编码的默认路径
+                
             if platform.system() == "Windows":
                 # Windows下的默认安装路径
                 default_paths = [

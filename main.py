@@ -8,7 +8,7 @@ from core.automation import AutomationManager
 from core.process_manager import CursorProcessManager
 from utils.system_config import SystemConfigManager
 from core.db_manager import DbManager
-from core.account_manager import AccountManager
+from core.account_manager_db import AccountManagerDb
 from ui.main_window import MainWindow
 from utils.logger import LoggerManager
 
@@ -69,9 +69,9 @@ def main():
     automation_manager = AutomationManager(browser_manager)
     logger.info("自动化管理器初始化完成")
     
-    # 初始化账号管理器
-    account_manager = AccountManager()
-    logger.info("账号管理器初始化完成")
+    # 初始化账号管理器 (使用数据库版本)
+    account_manager = AccountManagerDb()
+    logger.info("数据库版账号管理器初始化完成")
     
     # 创建并显示主窗口
     main_window = MainWindow(browser_manager, automation_manager)
