@@ -1,0 +1,23 @@
+{
+    "accounts": [
+        {
+            "id": "6a7b13e6-bd3b-4b09-b0b1-1fa72872b413",
+            "email": "hj6395759@gmail.com",
+            "auth_source": "Google",
+            "membership": "free_trial",
+            "last_login": "2025-04-12 01:24:07",
+            "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJnb29nbGUtb2F1dGgyfHVzZXJfMDFKUkhaWkpFSllETjMzUFlFWE1aNFE0ODIiLCJ0aW1lIjoiMTc0NDM2MTIyNiIsInJhbmRvbW5lc3MiOiJiMzg4OTg0Yy0wNTAyLTQ4MmIiLCJleHAiOjE3NDk1NDUyMjYsImlzcyI6Imh0dHBzOi8vYXV0aGVudGljYXRpb24uY3Vyc29yLnNoIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBvZmZsaW5lX2FjY2VzcyIsImF1ZCI6Imh0dHBzOi8vY3Vyc29yLmNvbSJ9.YfPwTlO82MCUr1idn0S-E_voUeWEIxABjGrPx72eaxw",
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJnb29nbGUtb2F1dGgyfHVzZXJfMDFKUkhaWkpFSllETjMzUFlFWE1aNFE0ODIiLCJ0aW1lIjoiMTc0NDM2MTIyNiIsInJhbmRvbW5lc3MiOiJiMzg4OTg0Yy0wNTAyLTQ4MmIiLCJleHAiOjE3NDk1NDUyMjYsImlzcyI6Imh0dHBzOi8vYXV0aGVudGljYXRpb24uY3Vyc29yLnNoIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBvZmZsaW5lX2FjY2VzcyIsImF1ZCI6Imh0dHBzOi8vY3Vyc29yLmNvbSJ9.YfPwTlO82MCUr1idn0S-E_voUeWEIxABjGrPx72eaxw",
+            "expire_time": "2025-06-10 16:47:06",
+            "status": "正常",
+            "auth_code": "从配置文件加载",
+            "created_at": "2025-04-12T01:09:42.274728"
+        }
+    ],
+    "thresholds": {
+        "max_requests_per_minute": 60,
+        "max_concurrent_sessions": 3,
+        "session_timeout_minutes": 30
+    },
+    "current_account_id": "6a7b13e6-bd3b-4b09-b0b1-1fa72872b413"
+}

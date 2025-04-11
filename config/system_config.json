@@ -1,0 +1,47 @@
+{
+    "cursor": {
+        "executable_path": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\cursor\\Cursor.exe",
+        "data_dir": "C:\\Users\\Administrator\\AppData\\Roaming\\Cursor",
+        "config_file": "C:\\Users\\Administrator\\AppData\\Roaming\\Cursor\\User\\globalStorage\\storage.json",
+        "db_file": "C:\\Users\\Administrator\\AppData\\Roaming\\Cursor\\User\\globalStorage\\state.vscdb",
+        "machine_id_path": "C:\\Users\\Administrator\\AppData\\Roaming\\Cursor\\machineId",
+        "resources_path": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Cursor\\resources\\app",
+        "updater_path": "C:\\Users\\Administrator\\AppData\\Local\\cursor-updater",
+        "update_yml_path": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Cursor\\resources\\app-update.yml",
+        "product_json_path": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Cursor\\resources\\app\\product.json"
+    },
+    "chrome": {
+        "executable_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        "user_data_dir": "C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data",
+        "automation": {
+            "headless": false,
+            "user_agent": {
+                "enabled": false,
+                "type": "default",
+                "custom": "",
+                "presets": {
+                    "chrome_windows": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                    "chrome_mac": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                    "chrome_android": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
+                    "chrome_ios": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/122.0.0.0 Mobile/15E148 Safari/604.1"
+                }
+            },
+            "window_size": {
+                "width": 1920,
+                "height": 1080
+            },
+            "disable_gpu": true,
+            "disable_images": false,
+            "incognito": false,
+            "disable_javascript": false,
+            "timeout": 30,
+            "use_local_browser": true
+        }
+    },
+    "backup": {
+        "enabled": true,
+        "interval_days": 7,
+        "max_backups": 5,
+        "backup_dir": "backups"
+    }
+}
