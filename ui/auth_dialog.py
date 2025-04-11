@@ -1082,8 +1082,29 @@ class AuthDialog(QDialog):
                         QMessageBox.warning(self, "错误", f"安装playwright失败: {str(e)}")
                         self.status_label.setText("安装playwright失败，将使用普通模式")
                         self.status_label.setStyleSheet("color: #dc3545;")
-                        # 切换到普通模式
-                        webbrowser.open(auth_url)
+                        # 尝试使用Chrome浏览器打开
+                        try:
+                            # 获取父窗口的system_config
+                            parent = self.parent()
+                            if parent and hasattr(parent, 'system_config'):
+                                chrome_path = parent.system_config.get_config("chrome", "executable_path", "")
+                                if chrome_path and os.path.exists(chrome_path):
+                                    # 使用Chrome打开
+                                    import subprocess
+                                    subprocess.Popen([chrome_path, auth_url])
+                                    self.status_label.setText(f"已使用Chrome打开{login_type}授权页面，请在浏览器中完成授权")
+                                    self.status_label.setStyleSheet("color: #17a2b8;")
+                                    return
+                            
+                            # 如果无法使用Chrome，则使用默认浏览器
+                            webbrowser.open(auth_url)
+                            self.status_label.setText(f"已打开{login_type}授权页面，请在浏览器中完成授权")
+                            self.status_label.setStyleSheet("color: #17a2b8;")
+                        except Exception as ex:
+                            # 切换到普通模式
+                            webbrowser.open(auth_url)
+                            self.status_label.setText(f"Chrome启动失败，已使用默认浏览器打开{login_type}授权页面")
+                            self.status_label.setStyleSheet("color: #ffc107;")  # 黄色，表示警告
                         return
                         
                 # 获取邮箱和密码（如果有）
@@ -1118,10 +1139,28 @@ class AuthDialog(QDialog):
                 self.status_label.setText(f"正在启动{login_type}自动化登录...")
                 self.status_label.setStyleSheet("color: #17a2b8;")
             else:
-                # 手动模式，直接打开浏览器
-                webbrowser.open(auth_url)
-                self.status_label.setText(f"已打开{login_type}授权页面，请在浏览器中完成授权")
-                self.status_label.setStyleSheet("color: #17a2b8;")
+                # 手动模式，尝试使用Chrome浏览器打开
+                try:
+                    # 获取父窗口的system_config
+                    parent = self.parent()
+                    if parent and hasattr(parent, 'system_config'):
+                        chrome_path = parent.system_config.get_config("chrome", "executable_path", "")
+                        if chrome_path and os.path.exists(chrome_path):
+                            # 使用Chrome打开
+                            import subprocess
+                            subprocess.Popen([chrome_path, auth_url])
+                            self.status_label.setText(f"已使用Chrome打开{login_type}授权页面，请在浏览器中完成授权")
+                            self.status_label.setStyleSheet("color: #17a2b8;")
+                            return
+                    
+                    # 如果无法获取Chrome路径，则使用默认浏览器
+                    webbrowser.open(auth_url)
+                    self.status_label.setText(f"已打开{login_type}授权页面，请在浏览器中完成授权")
+                    self.status_label.setStyleSheet("color: #17a2b8;")
+                except Exception as e:
+                    webbrowser.open(auth_url)
+                    self.status_label.setText(f"Chrome启动失败，已使用默认浏览器打开{login_type}授权页面")
+                    self.status_label.setStyleSheet("color: #ffc107;")  # 黄色，表示警告
         except Exception as e:
             QMessageBox.warning(self, "错误", f"打开授权页面失败: {str(e)}")
             self.status_label.setText("打开授权页面失败")

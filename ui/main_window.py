@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import (QMainWindow, QTabWidget, QVBoxLayout, QPushButton, QWidget, 
                         QLabel, QStatusBar, QHBoxLayout, QListWidget, QListWidgetItem, 
-                        QGroupBox, QFormLayout, QLineEdit, QCheckBox, QMessageBox, QFileDialog)
+                        QGroupBox, QFormLayout, QLineEdit, QCheckBox, QMessageBox, QFileDialog,
+                        QApplication)
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QFont, QPalette, QColor
 from core.browser import BrowserManager
@@ -17,7 +18,6 @@ from ui.system_config_tab import SystemConfigTab
 from ui.db_tab import DbTab
 from ui.account_tab import AccountTab
 from ui.auth_dialog import AuthDialog
-import json
 import os
 import platform
 import webbrowser
@@ -25,6 +25,7 @@ import uuid
 import datetime
 import base64
 import json
+import subprocess
 
 class MainWindow(QMainWindow):
     """主窗口类"""
@@ -268,31 +269,39 @@ class MainWindow(QMainWindow):
         self.expire_time_label = QLabel("未知")
         self.membership_label = QLabel("未知")
         
+        # 添加令牌信息到账号信息中
+        self.refresh_token_layout = QHBoxLayout()
+        self.refresh_token_text = QLineEdit()
+        self.refresh_token_text.setReadOnly(True)
+        self.refresh_token_text.setPlaceholderText("无刷新令牌")
+        self.refresh_token_text.setEchoMode(QLineEdit.Password)  # 密码模式显示
+        self.refresh_token_copy_btn = QPushButton("复制")
+        self.refresh_token_copy_btn.setFixedWidth(60)
+        self.refresh_token_copy_btn.clicked.connect(lambda: self.copy_to_clipboard(self.refresh_token_text.text()))
+        self.refresh_token_layout.addWidget(self.refresh_token_text)
+        self.refresh_token_layout.addWidget(self.refresh_token_copy_btn)
+        
+        self.access_token_layout = QHBoxLayout()
+        self.access_token_text = QLineEdit()
+        self.access_token_text.setReadOnly(True)
+        self.access_token_text.setPlaceholderText("无访问令牌")
+        self.access_token_text.setEchoMode(QLineEdit.Password)  # 密码模式显示
+        self.access_token_copy_btn = QPushButton("复制")
+        self.access_token_copy_btn.setFixedWidth(60)
+        self.access_token_copy_btn.clicked.connect(lambda: self.copy_to_clipboard(self.access_token_text.text()))
+        self.access_token_layout.addWidget(self.access_token_text)
+        self.access_token_layout.addWidget(self.access_token_copy_btn)
+        
         account_info_layout.addRow("邮箱:", self.email_label)
         account_info_layout.addRow("状态:", self.status_label)
         account_info_layout.addRow("会员类型:", self.membership_label)
         account_info_layout.addRow("最后登录:", self.last_login_label)
         account_info_layout.addRow("过期时间:", self.expire_time_label)
-        
-        # 添加令牌信息文本框
-        self.token_group = QGroupBox("令牌信息")
-        token_layout = QVBoxLayout()
-        
-        self.refresh_token_text = QLineEdit()
-        self.refresh_token_text.setReadOnly(True)
-        self.refresh_token_text.setPlaceholderText("刷新令牌")
-        token_layout.addWidget(self.refresh_token_text)
-        
-        self.access_token_text = QLineEdit()
-        self.access_token_text.setReadOnly(True)
-        self.access_token_text.setPlaceholderText("访问令牌")
-        token_layout.addWidget(self.access_token_text)
-        
-        self.token_group.setLayout(token_layout)
+        account_info_layout.addRow("刷新令牌:", self.refresh_token_layout)
+        account_info_layout.addRow("访问令牌:", self.access_token_layout)
         
         self.account_info_group.setLayout(account_info_layout)
         self.auth_tab_layout.addWidget(self.account_info_group)
-        self.auth_tab_layout.addWidget(self.token_group)
         
         # 添加功能按钮区域
         self.functions_group = QGroupBox("功能操作")
@@ -607,10 +616,26 @@ class MainWindow(QMainWindow):
     def handle_register(self):
         """处理注册账号"""
         try:
-            # 先跳转到首页
+            # 从system_config中获取Chrome浏览器路径
+            if hasattr(self, 'system_config'):
+                chrome_path = self.system_config.get_config("chrome", "executable_path", "")
+                if chrome_path and os.path.exists(chrome_path):
+                    # 先跳转到首页
+                    home_url = AuthDialog.BASE_URL
+                    self.auth_status_label.setText("正在跳转到首页...")
+                    self.auth_status_label.setStyleSheet("color: #17a2b8;")  # 蓝色，表示进行中
+                    
+                    # 使用Chrome打开
+                    subprocess.Popen([chrome_path, home_url])
+                    self.logger_manager.info(f"使用Chrome浏览器打开首页: {home_url}")
+                    
+                    # 创建一个短暂的延迟，让浏览器有时间加载首页
+                    QTimer.singleShot(1500, lambda: self._redirect_to_register_with_chrome())
+                    return
+            
+            # 如果无法获取Chrome路径，则使用默认浏览器
+            self.auth_status_label.setText("未找到Chrome浏览器，使用默认浏览器打开...")
             home_url = AuthDialog.BASE_URL
-            self.auth_status_label.setText("正在跳转到首页...")
-            self.auth_status_label.setStyleSheet("color: #17a2b8;")  # 蓝色，表示进行中
             webbrowser.open(home_url)
             
             # 创建一个短暂的延迟，让浏览器有时间加载首页
@@ -619,6 +644,29 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "错误", f"打开首页失败: {str(e)}")
             self.auth_status_label.setText("打开首页失败")
             self.auth_status_label.setStyleSheet("color: #dc3545;")  # 红色，表示失败
+            self.logger_manager.error(f"打开首页失败: {str(e)}")
+            
+    def _redirect_to_register_with_chrome(self):
+        """使用Chrome重定向到注册页面"""
+        try:
+            if hasattr(self, 'system_config'):
+                chrome_path = self.system_config.get_config("chrome", "executable_path", "")
+                if chrome_path and os.path.exists(chrome_path):
+                    # 打开注册页面
+                    register_url = AuthDialog.REGISTER_URL
+                    subprocess.Popen([chrome_path, register_url])
+                    self.auth_status_label.setText("已使用Chrome打开注册页面")
+                    self.auth_status_label.setStyleSheet("color: #17a2b8;")  # 蓝色，表示进行中
+                    self.logger_manager.info(f"使用Chrome浏览器打开注册页面: {register_url}")
+                    return
+            
+            # 如果无法使用Chrome，回退到默认方法
+            self._redirect_to_register()
+        except Exception as e:
+            QMessageBox.warning(self, "错误", f"使用Chrome打开注册页面失败: {str(e)}")
+            self.auth_status_label.setText("打开注册页面失败")
+            self.auth_status_label.setStyleSheet("color: #dc3545;")  # 红色，表示失败
+            self.logger_manager.error(f"使用Chrome打开注册页面失败: {str(e)}")
             
     def _redirect_to_register(self):
         """重定向到注册页面"""
